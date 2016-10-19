@@ -1,7 +1,6 @@
 package com.udacity.gradle.builditbigger;
 
 
-
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
@@ -26,12 +25,14 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class ASyncTest implements EndpointsAsyncTask.AsyncTaskListener{
     Context mContext;
-    CountDownLatch latch;
-    EndpointsAsyncTask endpointsAsyncTask;
+    EndpointsAsyncTask.AsyncTaskListener mAsyncTaskListener;
+    boolean called;
 
     @Before
     public void setup() {
         mContext = InstrumentationRegistry.getContext();
+        mAsyncTaskListener = this;
+        called = false;
     }
 
     @Test
@@ -42,20 +43,24 @@ public class ASyncTest implements EndpointsAsyncTask.AsyncTaskListener{
 
     @Test
     public void verifyAsyncTaskResponse() throws Throwable {
-        endpointsAsyncTask =  new EndpointsAsyncTask(this);
-        latch = new CountDownLatch(1);
+        final CountDownLatch latch = new CountDownLatch(1);
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync(new Runnable() {
             @Override
             public void run() {
-                endpointsAsyncTask.execute();
-                try {
-                    assertTrue("Latch Test", latch.await(10, TimeUnit.SECONDS));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                new EndpointsAsyncTask(mAsyncTaskListener) {
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        called = true;
+                        latch.countDown();
+                    }
+                }.execute();
             }
         });
+
+        latch.await(10, TimeUnit.SECONDS);
+        assertTrue(called);
     }
 
 
@@ -63,6 +68,5 @@ public class ASyncTest implements EndpointsAsyncTask.AsyncTaskListener{
     public void onAsyncResponse(String joke) throws IOException {
         assertTrue(joke != null);
         assertFalse(joke.equals(""));
-        latch.countDown();
     }
 }
