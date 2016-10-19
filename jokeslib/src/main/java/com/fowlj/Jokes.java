@@ -1,7 +1,6 @@
 package com.fowlj;
 
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Jokes {
     public static final String LOG_TAG = Jokes.class.getSimpleName();

@@ -1,6 +1,5 @@
 package com.udacity.gradle.builditbigger;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
 import com.example.jonfowler.myapplication.backend.myApi.MyApi;
