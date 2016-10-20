@@ -50,9 +50,13 @@ public class ASyncTest implements EndpointsAsyncTask.AsyncTaskListener{
             public void run() {
                 new EndpointsAsyncTask(mAsyncTaskListener) {
                     @Override
-                    protected void onPostExecute(Void aVoid) {
-                        super.onPostExecute(aVoid);
+                    protected void onPostExecute(String joke) {
                         called = true;
+                        try {
+                            listener.onAsyncResponse(joke);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         latch.countDown();
                     }
                 }.execute();

@@ -21,9 +21,11 @@ public class MainActivity extends ActionBarActivity
         implements EndpointsAsyncTask.AsyncTaskListener {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final int TIMEOUT = 10000; //number of milliseconds in 10 seconds
 
     InterstitialAd mInterstitialAd;
     Intent mJokeIntent;
+    boolean mJokeReturned = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,21 +39,7 @@ public class MainActivity extends ActionBarActivity
             @Override
             public void onAdClosed() {
                 requestNewInterstitial();
-                if(mJokeIntent != null) {
-                    startActivity(mJokeIntent);
-                } else {
-                    Context c = getBaseContext();
-                    Toast.makeText(c,
-                            c.getString(R.string.loading_error_message),
-                            Toast.LENGTH_SHORT).show();
-
-                    /*
-                    Ideally you could add a method or process that allows the app to repeatedly
-                    try to check if the intent is no longer null for certain amount of time and then
-                    launches or posts a timeout message.
-                    */
-
-                }
+                attemptJoke();
             }
         });
 
@@ -82,8 +70,22 @@ public class MainActivity extends ActionBarActivity
         if(mInterstitialAd.isLoaded()) {
             mInterstitialAd.show();
         } else {
-            startActivity(mJokeIntent);
+            attemptJoke();
         }
+    }
+
+    private void attemptJoke() {
+        long startTime = System.currentTimeMillis();
+
+        do {
+            if (mJokeReturned) {
+                startActivity(mJokeIntent);
+                mJokeReturned = false;
+                return;
+            }
+        } while(System.currentTimeMillis() - startTime < TIMEOUT);
+        Toast.makeText(this, R.string.timeout_message, Toast.LENGTH_SHORT).show();
+        mJokeReturned = false;
     }
 
     @Override
@@ -91,6 +93,7 @@ public class MainActivity extends ActionBarActivity
         mJokeIntent = new Intent(this, JokeActivity.class);
         mJokeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         mJokeIntent.putExtra(JokeActivity.JOKE_INTENT_TAG, joke);
+        mJokeReturned = true;
         Log.d(LOG_TAG, "mJokeIntent: " + mJokeIntent.toString());
     }
 }

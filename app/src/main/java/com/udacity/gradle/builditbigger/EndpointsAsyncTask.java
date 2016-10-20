@@ -10,7 +10,7 @@ import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 
 import java.io.IOException;
 
-public class EndpointsAsyncTask extends AsyncTask<Void, Void, Void> {
+public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
     private static final String BASE_URL = "http://10.0.2.2:";
     private static final String PORT = "8081";
     private static final String URL_SUFFIX = "/_ah/api/";
@@ -24,8 +24,7 @@ public class EndpointsAsyncTask extends AsyncTask<Void, Void, Void> {
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
-        String joke;
+    protected String doInBackground(Void... params) {
         if(myApiService == null) {  // Only do this once
             MyApi.Builder builder = new MyApi.Builder(AndroidHttp.newCompatibleTransport(),
                     new AndroidJsonFactory(), null)
@@ -45,12 +44,20 @@ public class EndpointsAsyncTask extends AsyncTask<Void, Void, Void> {
         }
 
         try {
-            joke  = myApiService.loadJoke().execute().getData();
-            listener.onAsyncResponse(joke);
+            return myApiService.loadJoke().execute().getData();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(String joke) {
+        try {
+            listener.onAsyncResponse(joke);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public interface AsyncTaskListener {
